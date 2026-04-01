@@ -1151,26 +1151,44 @@ let autoRefresh = null;
 let activeGroupFilter = 'all';
 let gaCurrentQuizzerId = null;
 
-// ── STORAGE ──
-async function saveToStorage(key, value) {
-  try { await window.storage.set(key, JSON.stringify(value), true); } catch(e) {}
-}
-async function loadFromStorage(key) {
+// ── API CONFIG ──
+const API_URL = 'https://script.google.com/macros/s/AKfycbyARE6Dr4Ioqq-_UxaNuv64N9A6l_cim62x2TULx1hpT0dCJhy8PbevKVwh_cPc53SV/exec';
+
+async function apiGet(action) {
   try {
-    const r = await window.storage.get(key, true);
-    return r ? JSON.parse(r.value) : null;
-  } catch(e) { return null; }
+    const r = await fetch(API_URL + '?action=' + action);
+    return await r.json();
+  } catch(e) { console.error('GET error:', e); return null; }
 }
 
-async function saveQuizzers() { await saveToStorage('jbq_quizzers', quizzers); }
-async function loadQuizzers() {
-  const q = await loadFromStorage('jbq_quizzers');
-  if (q) quizzers = q;
+async function apiPost(body) {
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    return await r.json();
+  } catch(e) { console.error('POST error:', e); return null; }
 }
-async function saveScores() { await saveToStorage('jbq_scores', scores); }
+
+async function saveQuizzers() {
+  await apiPost({ action: 'saveQuizzers', quizzers });
+}
+async function loadQuizzers() {
+  const data = await apiGet('getQuizzers');
+  if (Array.isArray(data)) {
+    quizzers = data.map(q => ({
+      ...q,
+      group: q.group ? Number(q.group) : null,
+      church: q.church || null
+    }));
+  }
+}
 async function loadScores() {
-  const s = await loadFromStorage('jbq_scores');
-  if (s) scores = s;
+  const data = await apiGet('getScores');
+  if (Array.isArray(data)) {
+    scores = data.map(s => ({ ...s, pts: Number(s.pts), roomId: Number(s.roomId) }));
+  }
 }
 
 // ── NAVIGATION ──
@@ -1518,15 +1536,14 @@ async function recordScore(btnIdx) {
     ts: new Date().toISOString()
   };
 
-  await loadScores();
   scores.push(entry);
-  await saveScores();
+  apiPost({ action: 'addScore', score: entry }); // fire and forget
 
   sessionLog.unshift(entry);
   sessionPts += btn.pts;
   document.getElementById('session-pts').textContent = sessionPts;
   renderLogEntries();
-  showToast(btn.pts > 0 ? '+' + btn.pts + ' pts — ' + quizzer.name : 'No points — ' + quizzer.name, btn.pts > 0 ? 'success' : '');
+  showToast(btn.pts > 0 ? '+' + btn.pts + ' pts — ' + displayName(quizzer.name) : 'No points — ' + displayName(quizzer.name), btn.pts > 0 ? 'success' : '');
 
   // Auto-advance rotation after scoring
   advanceRotation();
@@ -1558,11 +1575,9 @@ async function undoEntry(id) {
   const entry = sessionLog[idx];
   sessionLog.splice(idx, 1);
   sessionPts -= entry.pts;
-  document.getElementById('session-pts').textContent = sessionPts;
-
-  await loadScores();
   scores = scores.filter(s => s.id !== id);
-  await saveScores();
+  document.getElementById('session-pts').textContent = sessionPts;
+  apiPost({ action: 'deleteScore', id }); // fire and forget
   renderLogEntries();
   showToast('Entry removed', '');
 }
@@ -1572,10 +1587,9 @@ async function clearLog() {
   const ids = sessionLog.map(e => e.id);
   sessionLog = [];
   sessionPts = 0;
-  document.getElementById('session-pts').textContent = '0';
-  await loadScores();
   scores = scores.filter(s => !ids.includes(s.id));
-  await saveScores();
+  document.getElementById('session-pts').textContent = '0';
+  ids.forEach(id => apiPost({ action: 'deleteScore', id })); // fire and forget each
   renderLogEntries();
 }
 
@@ -1590,7 +1604,7 @@ function switchTab(tabId) {
 
 function startAutoRefresh() {
   stopAutoRefresh();
-  autoRefresh = setInterval(() => loadScores().then(renderQM), 8000);
+  autoRefresh = setInterval(() => Promise.all([loadScores(), loadQuizzers()]).then(renderQM), 8000);
 }
 function stopAutoRefresh() {
   if (autoRefresh) { clearInterval(autoRefresh); autoRefresh = null; }
