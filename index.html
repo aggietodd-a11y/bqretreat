@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JBQ Retreat Scoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5C842;
+    --gold-dim: #b89520;
+    --navy: #0C1F3F;
+    --navy-light: #162d57;
+    --navy-mid: #1e3a6e;
+    --white: #f0f4ff;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --gray: #8a9bbf;
+    --card-bg: #162d57cc;
+    --border: #2a4070;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 20%, #1e3a6e55 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, #0a1830 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; position: relative; z-index: 1; min-height: 100vh; padding: 0 0 40px; }
+  .screen.active { display: block; }
+
+  /* ── HOME ── */
+  #home {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    min-height: 100vh;
+  }
+  #home.active { display: flex; }
+  .logo-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-align: center;
+    line-height: 1;
+    text-shadow: 0 4px 24px #f5c84244;
+  }
+  .logo-sub {
+    font-size: 13px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-top: 6px;
+    text-align: center;
+  }
+  .home-divider {
+    width: 60px; height: 3px;
+    background: var(--gold);
+    margin: 28px auto;
+    border-radius: 2px;
+  }
+  .home-btn {
+    width: 100%; max-width: 340px;
+    padding: 18px 24px;
+    margin: 8px 0;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--card-bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: all 0.18s;
+    backdrop-filter: blur(8px);
+  }
+  .home-btn:hover, .home-btn:active {
+    border-color: var(--gold);
+    background: var(--navy-mid);
+  }
+  .home-btn .btn-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .home-btn .btn-label { line-height: 1.3; }
+  .home-btn .btn-desc {
+    font-size: 12px;
+    color: var(--gray);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .home-btn.gold-btn {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, #f5c84218, #f5c84208);
+  }
+
+  /* ── SETUP ── */
+  .screen-header {
+    background: var(--navy-light);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .back-btn {
+    background: none; border: none; color: var(--gray);
+    font-size: 22px; cursor: pointer; padding: 4px; line-height: 1;
+  }
+  .screen-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+  .screen-body { padding: 20px; }
+
+  .form-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .form-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    margin-bottom: 20px;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--gold); }
+
+  .room-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .room-card {
+    padding: 14px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .room-card.selected {
+    border-color: var(--gold);
+    background: var(--navy-mid);
+  }
+  .room-card .room-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .room-card .room-type {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 4px;
+    line-height: 1.3;
+  }
+
+  .primary-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 12px;
+    border: none;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+  .primary-btn:hover, .primary-btn:active { background: #ffd750; }
+  .primary-btn:disabled { background: var(--border); color: var(--gray); cursor: not-allowed; }
+
+  /* ── JUDGE SCORING ── */
+  .judge-header {
+    background: var(--navy-light);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    position: sticky; top: 0; z-index: 10;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .judge-room-badge {
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .judge-room-type {
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .session-score-pill {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    color: var(--gray);
+    text-align: right;
+  }
+  .session-score-pill strong { color: var(--gold); font-size: 18px; }
+
+  .quizzer-selector {
+    padding: 16px 20px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .quizzer-select {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--navy-mid);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+  }
+  .quizzer-select:focus { border-color: var(--gold); }
+
+  .scoring-area { padding: 16px 20px; }
+
+  .drill-info {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .drill-info-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 17px;
+    color: var(--gold);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .drill-info-rules {
+    font-size: 12px;
+    color: var(--gray);
+    line-height: 1.6;
+  }
+  .drill-info-rules span { color: var(--white); font-weight: 600; }
+
+  .score-buttons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .score-btn {
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--card-bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s;
+    backdrop-filter: blur(8px);
+  }
+  .score-btn:active { transform: scale(0.98); }
+  .score-btn.correct { border-color: var(--green); }
+  .score-btn.correct:hover, .score-btn.correct:active { background: #2ecc7122; }
+  .score-btn.bonus { border-color: var(--gold); }
+  .score-btn.bonus:hover, .score-btn.bonus:active { background: #f5c84222; }
+  .score-btn.incorrect { border-color: var(--red); }
+  .score-btn.incorrect:hover, .score-btn.incorrect:active { background: #e74c3c22; }
+
+  .score-btn .pts {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .score-btn.correct .pts { color: var(--green); }
+  .score-btn.bonus .pts { color: var(--gold); }
+  .score-btn.incorrect .pts { color: var(--red); }
+
+  .recent-log {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .recent-log-header {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .clear-log-btn {
+    background: none; border: none; color: var(--red);
+    font-size: 11px; cursor: pointer; letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .log-entry {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    animation: slideIn 0.2s ease;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .log-name { color: var(--white); font-weight: 500; }
+  .log-pts { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 1px; }
+  .log-pts.pos { color: var(--green); }
+  .log-pts.bonus { color: var(--gold); }
+  .log-pts.neg { color: var(--red); }
+  .log-undo { background: none; border: none; color: var(--gray); cursor: pointer; font-size: 16px; padding: 4px; }
+
+  /* ── QUIZMASTER ── */
+  #quizmaster .screen-body { padding: 16px; }
+
+  .qm-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  .leaderboard { }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+    animation: lbSlide 0.3s ease;
+  }
+  @keyframes lbSlide {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .lb-row.rank-1 { border-color: #F5C842; background: #f5c84212; }
+  .lb-row.rank-2 { border-color: #c0c0c0; background: #c0c0c008; }
+  .lb-row.rank-3 { border-color: #cd7f32; background: #cd7f3208; }
+
+  .lb-rank {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--gray);
+    width: 30px;
+    flex-shrink: 0;
+  }
+  .lb-row.rank-1 .lb-rank { color: #F5C842; }
+  .lb-row.rank-2 .lb-rank { color: #c0c0c0; }
+  .lb-row.rank-3 .lb-rank { color: #cd7f32; }
+
+  .lb-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 15px;
+    margin-left: 8px;
+  }
+  .lb-rooms {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 2px;
+  }
+  .lb-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 12px;
+    padding: 0 2px;
+  }
+
+  .room-status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .room-status-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .rscard-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .rscard-room {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .rscard-count {
+    font-size: 11px;
+    color: var(--gray);
+  }
+  .rscard-type {
+    font-size: 11px;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .rscard-entries {
+    font-size: 12px;
+    color: var(--gray);
+  }
+
+  .refresh-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--gray);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .refresh-btn:active { background: var(--card-bg); }
+
+  /* ── SETUP QUIZZERS ── */
+  .quizzer-list { margin-top: 12px; }
+  .quizzer-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    margin-bottom: 8px;
+  }
+  .quizzer-item-name { font-size: 15px; font-weight: 500; }
+  .remove-quizzer {
+    background: none; border: none; color: var(--red);
+    font-size: 18px; cursor: pointer; padding: 4px;
+  }
+  .add-quizzer-row {
+    display: flex; gap: 10px; margin-bottom: 12px;
+  }
+  .add-quizzer-row .form-input { margin-bottom: 0; flex: 1; }
+  .add-quizzer-btn {
+    padding: 13px 18px;
+    border-radius: 10px;
+    border: none;
+    background: var(--gold);
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 100;
+    transition: transform 0.25s ease;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  .no-quizzer-msg {
+    text-align: center;
+    padding: 24px;
+    color: var(--gray);
+    font-size: 14px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 16px;
+    background: var(--navy-light);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 9px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--gray);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    letter-spacing: 0.3px;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: var(--gold);
+    color: var(--navy);
+    border-color: var(--gold);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; padding: 16px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gray);
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state-msg { font-size: 14px; line-height: 1.6; }
+
+  .qm-password-area {
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .qm-lock-icon { font-size: 48px; margin-bottom: 16px; }
+  .qm-password-note {
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  /* ── IMPORT ── */
+  .import-tabs {
+    display: flex; gap: 6px; margin-bottom: 16px;
+  }
+  .import-tab {
+    flex: 1; padding: 9px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--gray);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer; text-align: center;
+    transition: all 0.15s;
+  }
+  .import-tab.active { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+
+  .import-panel { display: none; }
+  .import-panel.active { display: block; }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--gold); background: #f5c84210; }
+  .upload-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 32px; margin-bottom: 8px; }
+  .upload-label { font-size: 14px; font-weight: 600; color: var(--white); }
+  .upload-hint { font-size: 12px; color: var(--gray); margin-top: 4px; }
+
+  .paste-area {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    resize: vertical;
+    margin-bottom: 10px;
+  }
+  .paste-area:focus { border-color: var(--gold); }
+
+  .col-picker {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .col-picker-label {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gray); margin-bottom: 10px;
+  }
+  .col-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .col-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: none;
+    color: var(--white);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .col-chip.selected { border-color: var(--gold); background: #f5c84220; color: var(--gold); }
+
+  .preview-list {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .preview-header {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--gray);
+    display: flex; justify-content: space-between;
+  }
+  .preview-item {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .preview-item:last-child { border-bottom: none; }
+  .preview-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+
+  .section-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 18px 0 14px;
+  }
+  .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .section-divider-text { font-size: 11px; color: var(--gray); letter-spacing: 2px; text-transform: uppercase; }
+
+  .danger-btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    border: 1.5px solid var(--red);
+    background: none;
+    color: var(--red);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.15s;
+  }
+  .danger-btn:active { background: #e74c3c18; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <div class="logo-title">JBQ RETREAT</div>
+  <div class="logo-sub">Live Scoring System</div>
+  <div class="home-divider"></div>
+  <button class="home-btn gold-btn" onclick="showScreen('setup-quizzers')">
+    <span class="btn-icon">⚙️</span>
+    <div class="btn-label">
+      Setup Quizzers
+      <div class="btn-desc">Add quizzer names before retreat starts</div>
+    </div>
+  </button>
+  <button class="home-btn" onclick="showScreen('judge-setup')">
+    <span class="btn-icon">✏️</span>
+    <div class="btn-label">
+      Judge Entry
+      <div class="btn-desc">Score quizzers in your room</div>
+    </div>
+  </button>
+  <button class="home-btn" onclick="showScreen('group-assign')">
+    <span class="btn-icon">🔢</span>
+    <div class="btn-label">
+      Assign Groups
+      <div class="btn-desc">Count off quizzers into groups day-of</div>
+    </div>
+  </button>
+  <button class="home-btn" onclick="showScreen('quizmaster')">
+    <span class="btn-icon">🏆</span>
+    <div class="btn-label">
+      Quizmaster View
+      <div class="btn-desc">Live leaderboard &amp; all-room totals</div>
+    </div>
+  </button>
+</div>
+
+<!-- SETUP QUIZZERS -->
+<div id="setup-quizzers" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="screen-title">Quizzer Setup</div>
+  </div>
+  <div class="screen-body">
+
+    <!-- IMPORT SECTION -->
+    <div class="form-label">Import from CSV or Spreadsheet</div>
+    <div class="import-tabs">
+      <button class="import-tab active" onclick="switchImportTab('upload')">📁 Upload CSV</button>
+      <button class="import-tab" onclick="switchImportTab('paste')">📋 Paste Data</button>
+    </div>
+
+    <!-- Upload Panel -->
+    <div id="import-upload" class="import-panel active">
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" accept=".csv,.txt" onchange="handleFileUpload(event)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-label">Tap to select a CSV file</div>
+        <div class="upload-hint">.csv or .txt · comma or tab separated</div>
+      </div>
+    </div>
+
+    <!-- Paste Panel -->
+    <div id="import-paste" class="import-panel">
+      <textarea class="paste-area" id="paste-area" placeholder="Paste rows from Excel or Google Sheets here...&#10;&#10;Example:&#10;John Smith&#10;Jane Doe&#10;&#10;Or multi-column:&#10;1  John Smith  Team A&#10;2  Jane Doe    Team B"></textarea>
+      <button class="primary-btn" onclick="parsePaste()" style="margin-bottom:0">Parse Pasted Data</button>
+    </div>
+
+    <!-- Column Picker (shown after parsing) -->
+    <div id="col-picker-area" style="display:none; margin-top:14px">
+      <div class="col-picker" style="margin-bottom:10px">
+        <div class="col-picker-label">Which column has the <span style="color:var(--gold)">Names</span>?</div>
+        <div class="col-list" id="col-list"></div>
+      </div>
+      <div class="col-picker" style="margin-bottom:10px">
+        <div class="col-picker-label">Which column has the <span style="color:var(--green)">Church</span>? <span style="color:var(--gray);font-size:10px">(optional)</span></div>
+        <div class="col-list" id="church-col-list">
+          <button class="col-chip selected" id="church-none-btn" onclick="selectChurchCol(null, this)">None</button>
+        </div>
+      </div>
+      <div id="import-preview" style="display:none">
+        <div class="preview-list" id="preview-list"></div>
+        <button class="primary-btn" onclick="importParsedQuizzers()">Add These Quizzers</button>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-text">or add one at a time</div>
+      <div class="section-divider-line"></div>
+    </div>
+
+    <!-- Manual Add -->
+    <div class="add-quizzer-row">
+      <input class="form-input" id="new-quizzer-name" placeholder="Quizzer name" onkeydown="if(event.key==='Enter')addQuizzer()">
+      <button class="add-quizzer-btn" onclick="addQuizzer()">+</button>
+    </div>
+
+    <!-- Current List -->
+    <div class="form-label" style="margin-top:4px">Current Quizzers</div>
+    <div class="quizzer-list" id="quizzer-list"></div>
+
+    <div style="margin-top:16px">
+      <button class="primary-btn" onclick="showScreen('home')">Done — Return to Home</button>
+      <button class="danger-btn" onclick="clearAllQuizzers()">Clear All Quizzers</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- GROUP ASSIGN -->
+<div id="group-assign" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="screen-title">Assign Groups</div>
+  </div>
+  <div class="screen-body">
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:18px;font-size:13px;color:var(--gray);line-height:1.6">
+      Count off quizzers by number (2, 3, 4, 5...). Tap each quizzer's name and enter their group number. Unassigned quizzers appear at the top.
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)" id="ga-unassigned-count">0</div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray)">Unassigned</div>
+      </div>
+      <div style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green)" id="ga-assigned-count">0</div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray)">Assigned</div>
+      </div>
+      <div style="flex:1;background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white)" id="ga-group-count">0</div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray)">Groups</div>
+      </div>
+    </div>
+
+    <!-- Auto-Assign Section -->
+    <div style="background:var(--card-bg);border:1px solid var(--gold);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Auto-Assign by Church</div>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <div style="flex:1">
+          <div class="form-label" style="margin-bottom:6px">Number of Groups</div>
+          <input class="form-input" id="auto-assign-count" type="number" min="2" max="12" placeholder="e.g. 5" style="margin:0;padding:11px 14px">
+        </div>
+        <button onclick="runAutoAssign()" style="padding:11px 18px;border-radius:10px;border:none;background:var(--gold);color:var(--navy);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0">Auto-Assign</button>
+      </div>
+      <div style="font-size:12px;color:var(--gray);margin-top:8px;line-height:1.5">Spreads kids from the same church across different groups. Shows a preview before saving.</div>
+    </div>
+
+    <div class="form-label">Quizzers</div>
+    <div id="ga-list"></div>
+
+    <!-- Auto-Assign Preview Modal -->
+    <div id="aa-modal" style="display:none;position:fixed;inset:0;background:#000a;z-index:60;overflow-y:auto">
+      <div style="background:var(--navy-light);border-radius:16px;margin:16px;padding:20px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);letter-spacing:2px;margin-bottom:4px">Proposed Groups</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Review the assignments below. Tap a quizzer to move them to a different group.</div>
+        <div id="aa-preview-content"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button onclick="saveAutoAssign()" style="flex:1;padding:14px;border-radius:10px;border:none;background:var(--gold);color:var(--navy);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Save Assignments</button>
+          <button onclick="closeAAModal()" style="flex:1;padding:14px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--gray);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Move quizzer modal (within auto-assign preview) -->
+    <div id="aa-move-modal" style="display:none;position:fixed;inset:0;background:#000a;z-index:70;align-items:flex-end;justify-content:center">
+      <div style="background:var(--navy-light);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:20px 20px 36px;width:100%;max-width:480px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:2px;margin-bottom:4px" id="aa-move-name"></div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:16px">Move to which group?</div>
+        <div id="aa-move-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px"></div>
+        <button onclick="closeAAMoveModal()" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--gray);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Group number picker modal -->
+    <div id="ga-modal" style="display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:flex-end;justify-content:center">
+      <div style="background:var(--navy-light);border-top:1px solid var(--border);border-radius:16px 16px 0 0;padding:24px 20px 36px;width:100%;max-width:480px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:2px;margin-bottom:4px" id="ga-modal-name"></div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:20px">Tap a group number to assign</div>
+        <div id="ga-number-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px"></div>
+        <div style="display:flex;gap:10px">
+          <button style="flex:1;padding:13px;border-radius:10px;border:1.5px solid var(--red);background:none;color:var(--red);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer" onclick="clearGroupAssign()">Remove Group</button>
+          <button style="flex:1;padding:13px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--gray);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer" onclick="closeGAModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- JUDGE SETUP -->
+<div id="judge-setup" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="screen-title">Judge Setup</div>
+  </div>
+  <div class="screen-body">
+    <div class="form-label">Select Your Room</div>
+    <div class="room-grid" id="room-grid"></div>
+    <button class="primary-btn" id="enter-room-btn" onclick="enterRoom()" disabled>Enter Room</button>
+  </div>
+</div>
+
+<!-- JUDGE SCORING -->
+<div id="judge-scoring" class="screen">
+  <div class="judge-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="back-btn" onclick="confirmLeaveRoom()" title="Back to room selection">←</button>
+      <div>
+        <div class="judge-room-badge" id="judge-room-badge">ROOM 1</div>
+        <div class="judge-room-type" id="judge-room-type">Quotation Drill</div>
+      </div>
+    </div>
+    <div class="session-score-pill">
+      Session pts<br><strong id="session-pts">0</strong>
+    </div>
+  </div>
+
+  <!-- GROUP SELECTOR (shown before rotation starts) -->
+  <div id="group-select-area" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+    <div class="form-label" style="margin-bottom:8px">Select Group Walking In</div>
+    <select class="quizzer-select" id="judge-group-filter" onchange="filterQuizzersByGroup()" style="font-size:15px;margin-bottom:12px">
+      <option value="">-- Select a group --</option>
+    </select>
+    <div id="group-preview" style="display:none">
+      <div id="group-preview-list" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;max-height:160px;overflow-y:auto"></div>
+      <button class="primary-btn" id="start-rotation-btn" onclick="startRotation()">Start Round-Robin</button>
+    </div>
+  </div>
+
+  <!-- ROTATION VIEW (shown after rotation starts) -->
+  <div id="rotation-area" style="display:none;padding:16px 20px">
+
+    <!-- Current quizzer card -->
+    <div style="background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));border:2px solid var(--gold);border-radius:14px;padding:18px 20px;margin-bottom:12px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">Now Up</div>
+      <div id="current-quizzer-name" style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--white);letter-spacing:1px;line-height:1"></div>
+      <div id="rotation-progress" style="font-size:12px;color:var(--gray);margin-top:6px"></div>
+    </div>
+
+    <!-- Up next -->
+    <div id="up-next-bar" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:3px">Up Next</div>
+        <div id="next-quizzer-name" style="font-size:15px;font-weight:600;color:var(--white)"></div>
+      </div>
+      <div style="font-size:22px;color:var(--gray)">→</div>
+    </div>
+
+    <!-- Score buttons -->
+    <div class="score-buttons" id="score-buttons"></div>
+
+    <!-- Next button (advances rotation) -->
+    <button id="next-quizzer-btn" onclick="advanceRotation()" style="
+      width:100%;padding:15px;border-radius:12px;
+      border:1.5px solid var(--border);background:var(--card-bg);
+      color:var(--gray);font-family:'DM Sans',sans-serif;
+      font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px;
+      display:flex;align-items:center;justify-content:center;gap:8px">
+      Skip / Next Quizzer &nbsp;→
+    </button>
+
+    <!-- Change group button -->
+    <button onclick="resetRotation()" style="
+      width:100%;padding:11px;border-radius:10px;
+      border:1px solid var(--border);background:none;
+      color:var(--gray);font-family:'DM Sans',sans-serif;
+      font-size:13px;cursor:pointer;margin-bottom:16px">
+      ← Change Group
+    </button>
+
+    <!-- Recent log -->
+    <div class="recent-log">
+      <div class="recent-log-header">
+        <span>Recent Entries</span>
+        <button class="clear-log-btn" onclick="clearLog()">Clear</button>
+      </div>
+      <div id="log-entries"></div>
+    </div>
+
+    <!-- Drill rules (collapsed at bottom) -->
+    <div style="margin-top:14px">
+      <div class="drill-info">
+        <div class="drill-info-title" id="drill-info-title">Quotation Drill</div>
+        <div class="drill-info-rules" id="drill-info-rules"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZMASTER -->
+<div id="quizmaster" class="screen">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showScreen('home')">←</button>
+    <div class="screen-title">Quizmaster</div>
+    <button class="refresh-btn" onclick="refreshQM()" style="width:auto;margin:0;border:none;padding:4px 8px;font-size:20px">↻</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('tab-leaderboard')">🏆 Board</button>
+    <button class="tab" onclick="switchTab('tab-rooms')">🏠 Rooms</button>
+    <button class="tab" onclick="switchTab('tab-log')">📋 Log</button>
+  </div>
+
+  <div id="tab-leaderboard" class="tab-panel active">
+    <div class="qm-stats" id="qm-stats"></div>
+    <div style="margin-bottom:12px">
+      <div class="section-label" style="margin-bottom:8px">Filter by Group</div>
+      <div id="group-filter-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+    <div class="section-label">Leaderboard</div>
+    <div id="leaderboard-list"></div>
+  </div>
+
+  <div id="tab-rooms" class="tab-panel">
+    <div class="section-label">Room Activity</div>
+    <div class="room-status-grid" id="room-status-grid"></div>
+  </div>
+
+  <div id="tab-log" class="tab-panel">
+    <div class="section-label">All Entries</div>
+    <div id="all-log-list"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ── ROOMS CONFIG ──
+const ROOMS = [
+  { id: 1, name: 'Quotation', type: 'Quotation Drill',
+    rules: '<span>Call out reference.</span> Quizzer has 30s. Must be exact.<br><span>Correct:</span> 10pts | <span>Bonus (within 3s):</span> +5pts | <span>Incorrect:</span> 0pts',
+    buttons: [
+      { label: 'Correct', pts: 10, cls: 'correct', emoji: '✓' },
+      { label: 'Correct + Bonus (started within 3s)', pts: 15, cls: 'bonus', emoji: '⚡' },
+      { label: 'Incorrect / No Response', pts: 0, cls: 'incorrect', emoji: '✗' }
+    ]
+  },
+  { id: 2, name: 'Quot. Completion', type: 'Quotation Completion Drill',
+    rules: '<span>Read to interruption point, stop.</span> Quizzer quotes entire verse or finishes from interruption. 30s limit.<br><span>Correct:</span> 10pts | <span>Incorrect:</span> 0pts | No bonus.',
+    buttons: [
+      { label: 'Correct', pts: 10, cls: 'correct', emoji: '✓' },
+      { label: 'Incorrect / No Response', pts: 0, cls: 'incorrect', emoji: '✗' }
+    ]
+  },
+  { id: 3, name: 'Cross Reference', type: 'Cross Reference Drill (Jr. only)',
+    rules: '<span>Reader reads cross reference question.</span> Quizzer may interrupt at any time.<br><span>Correct:</span> 10pts | <span>Interrupted + Correct:</span> +5pts bonus | <span>Incorrect:</span> 0pts',
+    buttons: [
+      { label: 'Correct (no interrupt)', pts: 10, cls: 'correct', emoji: '✓' },
+      { label: 'Interrupted + Correct', pts: 15, cls: 'bonus', emoji: '⚡' },
+      { label: 'Incorrect / No Response', pts: 0, cls: 'incorrect', emoji: '✗' }
+    ]
+  },
+  { id: 4, name: 'Reference A', type: 'Reference A Drill',
+    rules: '<span>Reader reads verse; quizzer gives reference.</span> May interrupt and quote. 30s when quizzer interrupts or reader stops.<br><span>Correct:</span> 10pts | <span>Interrupted + Correct:</span> +5pts | <span>Incorrect:</span> 0pts',
+    buttons: [
+      { label: 'Correct (no interrupt)', pts: 10, cls: 'correct', emoji: '✓' },
+      { label: 'Interrupted + Correct', pts: 15, cls: 'bonus', emoji: '⚡' },
+      { label: 'Incorrect / No Response', pts: 0, cls: 'incorrect', emoji: '✗' }
+    ]
+  },
+  { id: 5, name: 'Reference B', type: 'Reference B Drill',
+    rules: '<span>Reader calls out reference; quizzer gives scripture to essence.</span> 30s. Bonus if started within 3s.<br><span>Correct:</span> 10pts | <span>Correct (within 3s):</span> +5pts bonus | <span>Incorrect:</span> 0pts',
+    buttons: [
+      { label: 'Correct', pts: 10, cls: 'correct', emoji: '✓' },
+      { label: 'Correct + Bonus (started within 3s)', pts: 15, cls: 'bonus', emoji: '⚡' },
+      { label: 'Incorrect / No Response', pts: 0, cls: 'incorrect', emoji: '✗' }
+    ]
+  },
+  { id: 6, name: 'Content', type: 'Content Drill',
+    rules: '<span>Reader reads question. No interruption.</span> 30s after reading finishes. Answer to essence.<br><span>Correct:</span> 10pts | <span>Incorrect:</span> 0pts | No bonus.',
+    buttons: [
+      { label: 'Correct', pts: 10, cls: 'correct', emoji: '✓' },
+      { label: 'Incorrect / No Response', pts: 0, cls: 'incorrect', emoji: '✗' }
+    ]
+  },
+  { id: 7, name: 'Interruption', type: 'Interruption Drill',
+    rules: '<span>Reader reads to premarked interruption (/) and stops.</span> Quizzer finishes the question (no answer needed). 20s.<br><span>Correct:</span> 10pts | <span>Incorrect:</span> 0pts | No bonus.',
+    buttons: [
+      { label: 'Correct', pts: 10, cls: 'correct', emoji: '✓' },
+      { label: 'Incorrect / No Response', pts: 0, cls: 'incorrect', emoji: '✗' }
+    ]
+  }
+];
+
+// ── STATE ──
+let quizzers = [];       // [{id, name, group}]
+
+// ── DISPLAY NAME HELPER ──
+// Returns "FirstName L." if a last name initial is available, otherwise full name
+function displayName(fullName) {
+  if (!fullName) return '';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + ' ' + parts[parts.length - 1][0].toUpperCase() + '.';
+}
+let scores = [];         // [{id, quizzerId, name, roomId, pts, ts, label}]
+let sessionLog = [];     // current judge session log (local)
+let currentRoom = null;
+let sessionPts = 0;
+let autoRefresh = null;
+let activeGroupFilter = 'all';
+let gaCurrentQuizzerId = null;
+
+// ── API CONFIG ──
+const API_URL = 'https://script.google.com/macros/s/AKfycbyARE6Dr4Ioqq-_UxaNuv64N9A6l_cim62x2TULx1hpT0dCJhy8PbevKVwh_cPc53SV/exec';
+
+async function apiGet(action) {
+  try {
+    const r = await fetch(API_URL + '?action=' + action);
+    return await r.json();
+  } catch(e) { console.error('GET error:', e); return null; }
+}
+
+async function apiPost(body) {
+  try {
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+    return await r.json();
+  } catch(e) { console.error('POST error:', e); return null; }
+}
+
+async function saveQuizzers() {
+  await apiPost({ action: 'saveQuizzers', quizzers });
+}
+async function loadQuizzers() {
+  const data = await apiGet('getQuizzers');
+  if (Array.isArray(data)) {
+    quizzers = data.map(q => ({
+      ...q,
+      group: q.group ? Number(q.group) : null,
+      church: q.church || null
+    }));
+  }
+}
+async function loadScores() {
+  const data = await apiGet('getScores');
+  if (Array.isArray(data)) {
+    scores = data.map(s => ({ ...s, pts: Number(s.pts), roomId: Number(s.roomId) }));
+  }
+}
+
+// ── NAVIGATION ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'judge-setup') renderRoomGrid();
+  if (id === 'setup-quizzers') renderQuizzerList();
+  if (id === 'group-assign') { loadQuizzers().then(renderGroupAssign); }
+  if (id === 'quizmaster') { Promise.all([loadScores(), loadQuizzers()]).then(renderQM); startAutoRefresh(); }
+  else stopAutoRefresh();
+}
+
+// ── GROUP ASSIGN ──
+function renderGroupAssign() {
+  const list = document.getElementById('ga-list');
+  if (!quizzers.length) {
+    list.innerHTML = '<div class="no-quizzer-msg">No quizzers loaded yet. Add quizzers first.</div>';
+    updateGAStats(); return;
+  }
+  const sorted = [...quizzers].sort((a, b) => {
+    if (!a.group && b.group) return -1;
+    if (a.group && !b.group) return 1;
+    if (a.group !== b.group) return (a.group || 0) - (b.group || 0);
+    return a.name.localeCompare(b.name);
+  });
+  list.innerHTML = sorted.map(q => {
+    const grpColor = q.group ? getGroupColor(q.group) : 'var(--gray)';
+    const grpLabel = q.group ? 'Group ' + q.group : 'Unassigned';
+    return '<div class="quizzer-item" onclick="openGAModal(\'' + q.id + '\')" style="cursor:pointer;align-items:center">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:600;font-size:15px">' + displayName(q.name) + ' <span style="font-size:11px;color:var(--gray);font-weight:400">' + q.name + '</span></div>' +
+        (q.church ? '<div style="font-size:11px;color:var(--gray);margin-top:1px">' + q.church + '</div>' : '') +
+      '</div>' +
+      '<span style="font-size:13px;font-weight:600;color:' + grpColor + ';background:' + (q.group ? grpColor + '18' : 'transparent') + ';' +
+      'border:1px solid ' + grpColor + ';border-radius:20px;padding:4px 12px;flex-shrink:0">' + grpLabel + '</span>' +
+      '</div>';
+  }).join('');
+  updateGAStats();
+}
+
+function updateGAStats() {
+  const assigned = quizzers.filter(q => q.group).length;
+  const groups = new Set(quizzers.map(q => q.group).filter(Boolean)).size;
+  const u = document.getElementById('ga-unassigned-count');
+  const a = document.getElementById('ga-assigned-count');
+  const g = document.getElementById('ga-group-count');
+  if (u) u.textContent = quizzers.length - assigned;
+  if (a) a.textContent = assigned;
+  if (g) g.textContent = groups;
+}
+
+function openGAModal(quizzerId) {
+  gaCurrentQuizzerId = quizzerId;
+  const q = quizzers.find(q => q.id === quizzerId);
+  document.getElementById('ga-modal-name').textContent = displayName(q.name);
+  const grid = document.getElementById('ga-number-grid');
+  grid.innerHTML = Array.from({length: 12}, (_, i) => i + 1).map(n => {
+    const isActive = q.group === n;
+    const col = getGroupColor(n);
+    return '<button onclick="assignGroup(' + n + ')" style="' +
+      'padding:16px 8px;border-radius:10px;' +
+      'border:2px solid ' + (isActive ? col : 'var(--border)') + ';' +
+      'background:' + (isActive ? col + '22' : 'none') + ';' +
+      'color:' + (isActive ? col : 'var(--white)') + ';' +
+      'font-family:\'Bebas Neue\',sans-serif;font-size:26px;cursor:pointer">' + n + '</button>';
+  }).join('');
+  document.getElementById('ga-modal').style.display = 'flex';
+}
+
+function closeGAModal() {
+  document.getElementById('ga-modal').style.display = 'none';
+  gaCurrentQuizzerId = null;
+}
+
+async function assignGroup(num) {
+  if (!gaCurrentQuizzerId) return;
+  const q = quizzers.find(q => q.id === gaCurrentQuizzerId);
+  if (!q) return;
+  q.group = num;
+  await saveQuizzers();
+  closeGAModal();
+  renderGroupAssign();
+  showToast(q.name + ' → Group ' + num, 'success');
+}
+
+async function clearGroupAssign() {
+  if (!gaCurrentQuizzerId) return;
+  const q = quizzers.find(q => q.id === gaCurrentQuizzerId);
+  if (!q) return;
+  q.group = null;
+  await saveQuizzers();
+  closeGAModal();
+  renderGroupAssign();
+  showToast('Group removed', '');
+}
+
+function getGroupColor(n) {
+  const colors = ['#F5C842','#2ecc71','#3498db','#e74c3c','#9b59b6','#e67e22','#1abc9c','#e91e8c','#00bcd4','#ff5722','#8bc34a','#607d8b'];
+  return colors[(n - 1) % colors.length];
+}
+
+// ── QUIZZER SETUP ──
+function renderQuizzerList() {
+  const el = document.getElementById('quizzer-list');
+  if (!quizzers.length) {
+    el.innerHTML = '<div class="no-quizzer-msg">No quizzers added yet.</div>';
+    return;
+  }
+  el.innerHTML = quizzers.map(q =>
+    '<div class="quizzer-item" id="qi-' + q.id + '">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="quizzer-item-name" id="qname-' + q.id + '">' +
+          '<span style="font-weight:600">' + displayName(q.name) + '</span>' +
+          '<span style="font-size:11px;color:var(--gray);margin-left:6px">' + q.name + '</span>' +
+        '</div>' +
+        (q.church ? '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + q.church + '</div>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">' +
+        '<button style="background:none;border:none;color:var(--gray);font-size:17px;cursor:pointer;padding:4px" onclick="startEdit('' + q.id + '')" title="Edit">✎</button>' +
+        '<button class="remove-quizzer" onclick="removeQuizzer('' + q.id + '')">✕</button>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function startEdit(id) {
+  const q = quizzers.find(q => q.id === id);
+  if (!q) return;
+  const row = document.getElementById('qi-' + id);
+  row.innerHTML = `
+    <input class="form-input" id="edit-input-${id}" value="${q.name}"
+      style="margin:0;flex:1;padding:10px 12px;font-size:14px"
+      onkeydown="if(event.key==='Enter')saveEdit('${id}');if(event.key==='Escape')renderQuizzerList()">
+    <div style="display:flex;gap:8px;margin-left:8px;flex-shrink:0">
+      <button class="add-quizzer-btn" style="padding:9px 14px;font-size:15px" onclick="saveEdit('${id}')">✓</button>
+      <button class="remove-quizzer" style="font-size:18px" onclick="renderQuizzerList()">✕</button>
+    </div>
+  `;
+  row.style.flexWrap = 'wrap';
+  const inp = document.getElementById('edit-input-' + id);
+  if (inp) { inp.focus(); inp.select(); }
+}
+
+async function saveEdit(id) {
+  const inp = document.getElementById('edit-input-' + id);
+  const newName = inp ? inp.value.trim() : '';
+  if (!newName) { showToast('Name cannot be empty', 'error'); return; }
+  const conflict = quizzers.find(q => q.id !== id && q.name.toLowerCase() === newName.toLowerCase());
+  if (conflict) { showToast('Name already exists', 'error'); return; }
+  const q = quizzers.find(q => q.id === id);
+  if (!q) return;
+  q.name = newName;
+  // Keep score entries in sync
+  scores = scores.map(s => s.quizzerId === id ? {...s, name: newName} : s);
+  await saveQuizzers();
+  await saveScores();
+  renderQuizzerList();
+  showToast('Name updated', 'success');
+}
+
+async function addQuizzer() {
+  const inp = document.getElementById('new-quizzer-name');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (quizzers.find(q => q.name.toLowerCase() === name.toLowerCase())) {
+    showToast('Name already exists', 'error'); return;
+  }
+  quizzers.push({ id: Date.now().toString(), name });
+  inp.value = '';
+  await saveQuizzers();
+  renderQuizzerList();
+  showToast(`${name} added!`, 'success');
+}
+
+async function removeQuizzer(id) {
+  quizzers = quizzers.filter(q => q.id !== id);
+  await saveQuizzers();
+  renderQuizzerList();
+}
+
+function confirmLeaveRoom() {
+  if (sessionLog.length > 0) {
+    if (!confirm(`You have ${sessionLog.length} entr${sessionLog.length !== 1 ? 'ies' : 'y'} logged this session. Scores are already saved. Leave this room?`)) return;
+  }
+  sessionLog = [];
+  sessionPts = 0;
+  showScreen('judge-setup');
+}
+
+// ── ROOM GRID ──
+function renderRoomGrid() {
+  const grid = document.getElementById('room-grid');
+  grid.innerHTML = ROOMS.map(r => `
+    <div class="room-card" id="rc-${r.id}" onclick="selectRoom(${r.id})">
+      <div class="room-num">${r.id}</div>
+      <div class="room-type">${r.name}</div>
+    </div>
+  `).join('');
+  currentRoom = null;
+  document.getElementById('enter-room-btn').disabled = true;
+}
+
+function selectRoom(id) {
+  document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('rc-' + id).classList.add('selected');
+  currentRoom = ROOMS.find(r => r.id === id);
+  document.getElementById('enter-room-btn').disabled = false;
+}
+
+// ── ROTATION STATE ──
+let rotationQueue = [];   // ordered list of quizzer ids for current group
+let rotationIndex = 0;    // index of current quizzer in queue
+let currentQuizzerId = null;
+
+async function enterRoom() {
+  if (!currentRoom) return;
+  await loadQuizzers();
+  sessionLog = [];
+  sessionPts = 0;
+  rotationQueue = [];
+  rotationIndex = 0;
+  currentQuizzerId = null;
+
+  document.getElementById('judge-room-badge').textContent = 'ROOM ' + currentRoom.id;
+  document.getElementById('judge-room-type').textContent = currentRoom.type;
+  document.getElementById('drill-info-title').textContent = currentRoom.type;
+  document.getElementById('drill-info-rules').innerHTML = currentRoom.rules;
+  document.getElementById('session-pts').textContent = '0';
+
+  // Populate group dropdown
+  const groups = [...new Set(quizzers.map(q => q.group).filter(Boolean))].sort((a,b) => a-b);
+  const gSel = document.getElementById('judge-group-filter');
+  gSel.innerHTML = '<option value="">-- Select a group --</option>' +
+    groups.map(g => '<option value="' + g + '">Group ' + g + '</option>').join('');
+  if (!groups.length) {
+    gSel.innerHTML = '<option value="">No groups assigned yet</option>';
+  }
+
+  // Show group select, hide rotation
+  document.getElementById('group-select-area').style.display = 'block';
+  document.getElementById('rotation-area').style.display = 'none';
+  document.getElementById('group-preview').style.display = 'none';
+
+  renderScoreButtons();
+  renderLogEntries();
+  showScreen('judge-scoring');
+}
+
+function filterQuizzersByGroup() {
+  const gSel = document.getElementById('judge-group-filter');
+  const val = gSel.value;
+  if (!val) { document.getElementById('group-preview').style.display = 'none'; return; }
+
+  const filtered = quizzers
+    .filter(q => q.group === Number(val))
+    .sort((a,b) => a.name.localeCompare(b.name));
+
+  const previewList = document.getElementById('group-preview-list');
+  previewList.innerHTML = filtered.length
+    ? filtered.map((q, i) => 
+        '<div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px;display:flex;align-items:center;gap:10px">' +
+        '<span style="font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:var(--gray);width:22px">' + (i+1) + '</span>' +
+        '<span style="font-weight:500">' + displayName(q.name) + '</span></div>'
+      ).join('')
+    : '<div style="padding:14px;color:var(--gray);font-size:14px">No quizzers in this group.</div>';
+
+  document.getElementById('group-preview').style.display = filtered.length ? 'block' : 'none';
+}
+
+function startRotation() {
+  const gSel = document.getElementById('judge-group-filter');
+  const val = gSel.value;
+  if (!val) { showToast('Select a group first', 'error'); return; }
+
+  rotationQueue = quizzers
+    .filter(q => q.group === Number(val))
+    .sort((a,b) => a.name.localeCompare(b.name))
+    .map(q => q.id);
+
+  if (!rotationQueue.length) { showToast('No quizzers in this group', 'error'); return; }
+
+  rotationIndex = 0;
+  currentQuizzerId = rotationQueue[0];
+
+  document.getElementById('group-select-area').style.display = 'none';
+  document.getElementById('rotation-area').style.display = 'block';
+  updateRotationDisplay();
+}
+
+function updateRotationDisplay() {
+  const current = quizzers.find(q => q.id === rotationQueue[rotationIndex]);
+  const nextIdx = (rotationIndex + 1) % rotationQueue.length;
+  const next = quizzers.find(q => q.id === rotationQueue[nextIdx]);
+
+  document.getElementById('current-quizzer-name').textContent = current ? displayName(current.name) : '';
+  document.getElementById('next-quizzer-name').textContent = next ? displayName(next.name) : '';
+  document.getElementById('rotation-progress').textContent =
+    (rotationIndex + 1) + ' of ' + rotationQueue.length +
+    ' · Round ' + Math.floor(sessionLog.length / rotationQueue.length + 1);
+
+  currentQuizzerId = current ? current.id : null;
+}
+
+function advanceRotation() {
+  rotationIndex = (rotationIndex + 1) % rotationQueue.length;
+  updateRotationDisplay();
+}
+
+function resetRotation() {
+  rotationQueue = [];
+  rotationIndex = 0;
+  currentQuizzerId = null;
+  document.getElementById('group-select-area').style.display = 'block';
+  document.getElementById('rotation-area').style.display = 'none';
+  document.getElementById('group-preview').style.display = 'none';
+  document.getElementById('judge-group-filter').value = '';
+}
+
+function renderScoreButtons() {
+  if (!currentRoom) return;
+  const area = document.getElementById('score-buttons');
+  area.innerHTML = currentRoom.buttons.map((b, i) =>
+    '<button class="score-btn ' + b.cls + '" onclick="recordScore(' + i + ')">' +
+    '<span>' + b.emoji + ' ' + b.label + '</span>' +
+    '<span class="pts">' + (b.pts > 0 ? '+' + b.pts : b.pts) + ' pts</span>' +
+    '</button>'
+  ).join('');
+}
+
+async function recordScore(btnIdx) {
+  if (!currentQuizzerId) { showToast('No quizzer selected', 'error'); return; }
+  const btn = currentRoom.buttons[btnIdx];
+  const quizzer = quizzers.find(q => q.id === currentQuizzerId);
+  if (!quizzer) { showToast('Quizzer not found', 'error'); return; }
+
+  const entry = {
+    id: Date.now().toString() + Math.random().toString(36).slice(2,6),
+    quizzerId: currentQuizzerId,
+    name: quizzer.name,
+    roomId: currentRoom.id,
+    roomName: currentRoom.name,
+    pts: btn.pts,
+    label: btn.label,
+    ts: new Date().toISOString()
+  };
+
+  scores.push(entry);
+  apiPost({ action: 'addScore', score: entry }); // fire and forget
+
+  sessionLog.unshift(entry);
+  sessionPts += btn.pts;
+  document.getElementById('session-pts').textContent = sessionPts;
+  renderLogEntries();
+  showToast(btn.pts > 0 ? '+' + btn.pts + ' pts — ' + displayName(quizzer.name) : 'No points — ' + displayName(quizzer.name), btn.pts > 0 ? 'success' : '');
+
+  // Auto-advance rotation after scoring
+  advanceRotation();
+}
+
+function renderLogEntries() {
+  const el = document.getElementById('log-entries');
+  if (!sessionLog.length) {
+    el.innerHTML = '<div class="no-quizzer-msg" style="padding:14px">No entries yet.</div>';
+    return;
+  }
+  el.innerHTML = sessionLog.slice(0, 10).map(e => `
+    <div class="log-entry">
+      <div>
+        <div class="log-name">${displayName(e.name)}</div>
+        <div style="font-size:11px;color:var(--gray)">${e.label}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="log-pts ${e.pts > 10 ? 'bonus' : e.pts > 0 ? 'pos' : 'neg'}">${e.pts > 0 ? '+' : ''}${e.pts}</span>
+        <button class="log-undo" onclick="undoEntry('${e.id}')">↩</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function undoEntry(id) {
+  const idx = sessionLog.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  const entry = sessionLog[idx];
+  sessionLog.splice(idx, 1);
+  sessionPts -= entry.pts;
+  scores = scores.filter(s => s.id !== id);
+  document.getElementById('session-pts').textContent = sessionPts;
+  apiPost({ action: 'deleteScore', id }); // fire and forget
+  renderLogEntries();
+  showToast('Entry removed', '');
+}
+
+async function clearLog() {
+  if (!sessionLog.length) return;
+  const ids = sessionLog.map(e => e.id);
+  sessionLog = [];
+  sessionPts = 0;
+  scores = scores.filter(s => !ids.includes(s.id));
+  document.getElementById('session-pts').textContent = '0';
+  ids.forEach(id => apiPost({ action: 'deleteScore', id })); // fire and forget each
+  renderLogEntries();
+}
+
+// ── QUIZMASTER ──
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  const tabMap = { 'tab-leaderboard': 0, 'tab-rooms': 1, 'tab-log': 2 };
+  document.querySelectorAll('.tab')[tabMap[tabId]].classList.add('active');
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefresh = setInterval(() => Promise.all([loadScores(), loadQuizzers()]).then(renderQM), 8000);
+}
+function stopAutoRefresh() {
+  if (autoRefresh) { clearInterval(autoRefresh); autoRefresh = null; }
+}
+
+async function refreshQM() {
+  await loadScores();
+  await loadQuizzers();
+  renderQM();
+  showToast('Refreshed', 'success');
+}
+
+function renderQM() {
+  renderLeaderboard();
+  renderRoomStatus();
+  renderAllLog();
+}
+
+function getTotals(groupFilter) {
+  // Build lookup of quizzer group from quizzers array
+  const groupMap = {};
+  quizzers.forEach(q => { if (q.group) groupMap[q.id] = q.group; });
+
+  const totals = {};
+  for (const s of scores) {
+    const grp = groupMap[s.quizzerId] || null;
+    if (groupFilter && groupFilter !== 'all' && grp !== groupFilter) continue;
+    if (!totals[s.quizzerId]) totals[s.quizzerId] = { name: s.name, group: grp, total: 0, rooms: new Set(), entries: 0 };
+    totals[s.quizzerId].total += s.pts;
+    totals[s.quizzerId].rooms.add(s.roomId);
+    totals[s.quizzerId].entries++;
+  }
+  return Object.entries(totals).map(([id, v]) => ({
+    id, name: v.name, group: v.group, total: v.total, rooms: v.rooms.size, entries: v.entries
+  })).sort((a, b) => b.total - a.total);
+}
+
+function renderGroupFilterChips() {
+  const groups = [...new Set(quizzers.map(q => q.group).filter(Boolean))].sort((a,b) => a-b);
+  const el = document.getElementById('group-filter-chips');
+  if (!el) return;
+  const chips = [{ val: 'all', label: 'All' }, ...groups.map(g => ({ val: g, label: 'Group ' + g }))];
+  el.innerHTML = chips.map(c => {
+    const isActive = activeGroupFilter === c.val;
+    const col = c.val === 'all' ? 'var(--gold)' : getGroupColor(c.val);
+    return '<button onclick="setGroupFilter(' + JSON.stringify(c.val) + ')" style="' +
+      'padding:7px 14px;border-radius:20px;cursor:pointer;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;transition:all 0.15s;' +
+      'border:1.5px solid ' + (isActive ? col : 'var(--border)') + ';' +
+      'background:' + (isActive ? col + '22' : 'none') + ';' +
+      'color:' + (isActive ? col : 'var(--gray)') + '">' + c.label + '</button>';
+  }).join('');
+}
+
+function setGroupFilter(val) {
+  activeGroupFilter = val;
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  renderGroupFilterChips();
+  const totals = getTotals(activeGroupFilter);
+  const allTotals = getTotals('all');
+
+  const statsEl = document.getElementById('qm-stats');
+  const groups = new Set(quizzers.map(q => q.group).filter(Boolean)).size;
+  statsEl.innerHTML =
+    '<div class="stat-card"><div class="stat-val">' + quizzers.length + '</div><div class="stat-label">Quizzers</div></div>' +
+    '<div class="stat-card"><div class="stat-val">' + groups + '</div><div class="stat-label">Groups</div></div>' +
+    '<div class="stat-card"><div class="stat-val">' + (allTotals[0] ? allTotals[0].total : 0) + '</div><div class="stat-label">Top Score</div></div>';
+
+  const lbEl = document.getElementById('leaderboard-list');
+  if (!totals.length) {
+    lbEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">\u{1F4CB}</div><div class="empty-state-msg">No scores yet.<br>Judges will appear here once they start scoring.</div></div>';
+    return;
+  }
+  lbEl.innerHTML = totals.map((q, i) => {
+    const grpColor = q.group ? getGroupColor(q.group) : 'var(--gray)';
+    const grpBadge = q.group
+      ? '<span style="font-size:11px;font-weight:600;color:' + grpColor + ';background:' + grpColor + '18;border:1px solid ' + grpColor + ';border-radius:10px;padding:2px 8px;margin-left:6px">G' + q.group + '</span>'
+      : '';
+    return '<div class="lb-row rank-' + (i+1 <= 3 ? i+1 : '') + '">' +
+      '<div class="lb-rank">' + (i+1) + '</div>' +
+      '<div style="flex:1;margin-left:8px">' +
+        '<div class="lb-name">' + displayName(q.name) + grpBadge + '</div>' +
+        '<div class="lb-rooms">' + q.rooms + ' room' + (q.rooms !== 1 ? 's' : '') + ' · ' + q.entries + ' entr' + (q.entries !== 1 ? 'ies' : 'y') + '</div>' +
+      '</div>' +
+      '<div class="lb-score">' + q.total + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderRoomStatus() {
+  const grid = document.getElementById('room-status-grid');
+  grid.innerHTML = ROOMS.map(r => {
+    const roomEntries = scores.filter(s => s.roomId === r.id);
+    const unique = new Set(roomEntries.map(s => s.quizzerId)).size;
+    return `
+      <div class="room-status-card">
+        <div class="rscard-top">
+          <div class="rscard-room">Room ${r.id}</div>
+          <div class="rscard-count">${roomEntries.length} entries</div>
+        </div>
+        <div class="rscard-type">${r.name}</div>
+        <div class="rscard-entries">${unique} quizzer${unique !== 1 ? 's' : ''} scored</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAllLog() {
+  const el = document.getElementById('all-log-list');
+  if (!scores.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-msg">No entries yet.</div></div>';
+    return;
+  }
+  const sorted = [...scores].sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  el.innerHTML = sorted.slice(0, 50).map(e => `
+    <div class="log-entry">
+      <div>
+        <div class="log-name">${e.name}</div>
+        <div style="font-size:11px;color:var(--gray)">Room ${e.roomId} · ${e.roomName} · ${new Date(e.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <span class="log-pts ${e.pts > 10 ? 'bonus' : e.pts > 0 ? 'pos' : 'neg'}">${e.pts > 0 ? '+' : ''}${e.pts}</span>
+    </div>
+  `).join('');
+}
+
+// ── TOAST ──
+let toastTimer = null;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  void t.offsetWidth;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ── IMPORT ──
+let parsedRows = [];
+let selectedCol = null;
+let selectedChurchCol = null;
+
+function switchImportTab(tab) {
+  document.querySelectorAll('.import-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.import-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('import-' + tab).classList.add('active');
+  event.target.classList.add('active');
+  resetImportState();
+}
+
+function resetImportState() {
+  parsedRows = []; selectedCol = null; selectedChurchCol = null;
+  document.getElementById('col-picker-area').style.display = 'none';
+  document.getElementById('import-preview').style.display = 'none';
+}
+
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => parseCSVText(ev.target.result);
+  reader.readAsText(file);
+}
+
+function parseCSVText(text) {
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  const delim = lines[0].includes('\t') ? '\t' : ',';
+  parsedRows = lines.map(l => l.split(delim).map(c => c.replace(/^"|"$/g, '').trim()));
+  showColPicker();
+}
+
+function parsePaste() {
+  const text = document.getElementById('paste-area').value.trim();
+  if (!text) { showToast('Nothing to parse', 'error'); return; }
+  parseCSVText(text);
+}
+
+function showColPicker() {
+  if (!parsedRows.length) { showToast('No data found', 'error'); return; }
+  const maxCols = Math.max(...parsedRows.map(r => r.length));
+  document.getElementById('col-picker-area').style.display = 'block';
+
+  // Name column chips
+  const colList = document.getElementById('col-list');
+  colList.innerHTML = Array.from({length: maxCols}, (_, i) => {
+    const sample = parsedRows[0][i] || '';
+    return '<button class="col-chip" onclick="selectCol(' + i + ', this)">Col ' + (i+1) + ': <em>' + sample.slice(0,14) + '</em></button>';
+  }).join('');
+  if (maxCols === 1) selectCol(0, colList.querySelector('.col-chip'));
+
+  // Church column chips
+  const churchList = document.getElementById('church-col-list');
+  churchList.innerHTML = '<button class="col-chip selected" id="church-none-btn" onclick="selectChurchCol(null, this)">None</button>' +
+    Array.from({length: maxCols}, (_, i) => {
+      const sample = parsedRows[0][i] || '';
+      return '<button class="col-chip" onclick="selectChurchCol(' + i + ', this)">Col ' + (i+1) + ': <em>' + sample.slice(0,14) + '</em></button>';
+    }).join('');
+
+  // Auto-detect church column by header keyword
+  parsedRows[0].forEach((cell, i) => {
+    if (/church|congregation|assembly/i.test(cell)) {
+      const btn = churchList.querySelectorAll('.col-chip')[i + 1];
+      if (btn) selectChurchCol(i, btn);
+    }
+  });
+}
+
+function selectCol(idx, el) {
+  document.querySelectorAll('#col-list .col-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedCol = idx;
+  showImportPreview();
+}
+
+function selectChurchCol(idx, el) {
+  document.querySelectorAll('#church-col-list .col-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedChurchCol = idx;
+  if (selectedCol !== null) showImportPreview();
+}
+
+function showImportPreview() {
+  if (selectedCol === null) return;
+  const isHeader = r => /^(name|quizzer|student|first|last|church|congregation|assembly)$/i.test(r);
+  const rows = parsedRows.filter(r => !isHeader(r[selectedCol] || ''));
+
+  const previewEl = document.getElementById('import-preview');
+  const listEl = document.getElementById('preview-list');
+  previewEl.style.display = 'block';
+
+  const hasChurch = selectedChurchCol !== null;
+  listEl.innerHTML =
+    '<div class="preview-header"><span>Preview</span><span style="color:var(--gold)">' + rows.length + ' quizzers</span></div>' +
+    rows.slice(0, 15).map(r => {
+      const name = r[selectedCol] || '';
+      const church = hasChurch ? (r[selectedChurchCol] || '') : '';
+      return '<div class="preview-item"><div class="preview-dot"></div>' +
+        '<span>' + name + (church ? ' <span style="font-size:11px;color:var(--gray)">· ' + church + '</span>' : '') + '</span></div>';
+    }).join('') +
+    (rows.length > 15 ? '<div class="preview-item" style="color:var(--gray)">...and ' + (rows.length - 15) + ' more</div>' : '');
+}
+
+async function importParsedQuizzers() {
+  if (selectedCol === null) { showToast('Select a name column first', 'error'); return; }
+  const isHeader = r => /^(name|quizzer|student|first|last|church|congregation|assembly)$/i.test(r);
+  const rows = parsedRows.filter(r => !isHeader(r[selectedCol] || ''));
+
+  let added = 0, skipped = 0;
+  for (const r of rows) {
+    const name = (r[selectedCol] || '').trim();
+    const church = selectedChurchCol !== null ? (r[selectedChurchCol] || '').trim() : '';
+    if (!name) continue;
+    if (quizzers.find(q => q.name.toLowerCase() === name.toLowerCase())) { skipped++; continue; }
+    quizzers.push({ id: Date.now().toString() + Math.random().toString(36).slice(2,5), name, church: church || null });
+    added++;
+  }
+  await saveQuizzers();
+  renderQuizzerList();
+  resetImportState();
+  document.getElementById('paste-area').value = '';
+  showToast(added + ' added' + (skipped ? ', ' + skipped + ' skipped' : ''), 'success');
+}
+
+async function clearAllQuizzers() {
+  if (!quizzers.length) return;
+  if (!confirm(`Remove all ${quizzers.length} quizzers?`)) return;
+  quizzers = [];
+  await saveQuizzers();
+  renderQuizzerList();
+  showToast('All quizzers cleared', '');
+}
+
+// ── AUTO-ASSIGN ──
+let aaDraft = []; // [{quizzerId, group}]
+let aaMoveQuizzerId = null;
+let aaGroupCount = 0;
+
+function runAutoAssign() {
+  const n = parseInt(document.getElementById('auto-assign-count').value);
+  if (!n || n < 2 || n > 12) { showToast('Enter a number between 2 and 12', 'error'); return; }
+  if (!quizzers.length) { showToast('No quizzers loaded', 'error'); return; }
+
+  aaGroupCount = n;
+
+  // Group quizzers by church, shuffle within each church
+  const churchMap = {};
+  quizzers.forEach(q => {
+    const church = (q.church || 'Unknown').trim();
+    if (!churchMap[church]) churchMap[church] = [];
+    churchMap[church].push(q.id);
+  });
+
+  // Sort churches by size descending so largest churches get spread first
+  const churches = Object.entries(churchMap).sort((a,b) => b[1].length - a[1].length);
+
+  // Deal out round-robin across groups
+  const groups = Array.from({length: n}, () => []);
+  let groupIdx = 0;
+  for (const [, ids] of churches) {
+    // Shuffle ids within church for variety
+    const shuffled = ids.slice().sort(() => Math.random() - 0.5);
+    for (const id of shuffled) {
+      groups[groupIdx % n].push(id);
+      groupIdx++;
+    }
+  }
+
+  // Build draft assignments
+  aaDraft = [];
+  groups.forEach((ids, gi) => {
+    ids.forEach(id => aaDraft.push({ quizzerId: id, group: gi + 1 }));
+  });
+
+  renderAAPreview();
+  document.getElementById('aa-modal').style.display = 'block';
+}
+
+function renderAAPreview() {
+  const el = document.getElementById('aa-preview-content');
+  const groups = Array.from({length: aaGroupCount}, (_, i) => i + 1);
+
+  el.innerHTML = groups.map(g => {
+    const members = aaDraft
+      .filter(d => d.group === g)
+      .map(d => quizzers.find(q => q.id === d.quizzerId))
+      .filter(Boolean);
+
+    const col = getGroupColor(g);
+    return '<div style="background:var(--navy);border:1px solid ' + col + '44;border-radius:10px;margin-bottom:10px;overflow:hidden">' +
+      '<div style="padding:10px 14px;background:' + col + '18;border-bottom:1px solid ' + col + '44;font-family:\'Bebas Neue\',sans-serif;font-size:16px;color:' + col + ';letter-spacing:1px">Group ' + g + ' <span style="font-size:13px;color:var(--gray);font-family:\'DM Sans\',sans-serif;font-weight:400">· ' + members.length + ' kids</span></div>' +
+      members.map(q =>
+        '<div onclick="openAAMoveModal(\'' + q.id + '\')" style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer">' +
+        '<div>' +
+          '<div style="font-size:14px;font-weight:600">' + displayName(q.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--gray)">' + (q.church || 'No church') + '</div>' +
+        '</div>' +
+        '<span style="font-size:12px;color:var(--gray)">Move →</span>' +
+        '</div>'
+      ).join('') +
+    '</div>';
+  }).join('');
+}
+
+function openAAMoveModal(quizzerId) {
+  aaMoveQuizzerId = quizzerId;
+  const q = quizzers.find(q => q.id === quizzerId);
+  document.getElementById('aa-move-name').textContent = displayName(q.name);
+  const current = aaDraft.find(d => d.quizzerId === quizzerId);
+
+  const grid = document.getElementById('aa-move-grid');
+  grid.innerHTML = Array.from({length: aaGroupCount}, (_, i) => i + 1).map(g => {
+    const isActive = current && current.group === g;
+    const col = getGroupColor(g);
+    return '<button onclick="moveAAQuizzer(' + g + ')" style="' +
+      'padding:14px 8px;border-radius:10px;' +
+      'border:2px solid ' + (isActive ? col : 'var(--border)') + ';' +
+      'background:' + (isActive ? col + '22' : 'none') + ';' +
+      'color:' + (isActive ? col : 'var(--white)') + ';' +
+      'font-family:\'Bebas Neue\',sans-serif;font-size:24px;cursor:pointer">' + g + '</button>';
+  }).join('');
+  document.getElementById('aa-move-modal').style.display = 'flex';
+}
+
+function moveAAQuizzer(toGroup) {
+  const draft = aaDraft.find(d => d.quizzerId === aaMoveQuizzerId);
+  if (draft) draft.group = toGroup;
+  closeAAMoveModal();
+  renderAAPreview();
+}
+
+function closeAAMoveModal() {
+  document.getElementById('aa-move-modal').style.display = 'none';
+  aaMoveQuizzerId = null;
+}
+
+async function saveAutoAssign() {
+  for (const d of aaDraft) {
+    const q = quizzers.find(q => q.id === d.quizzerId);
+    if (q) q.group = d.group;
+  }
+  await saveQuizzers();
+  closeAAModal();
+  renderGroupAssign();
+  showToast('Groups saved!', 'success');
+}
+
+function closeAAModal() {
+  document.getElementById('aa-modal').style.display = 'none';
+  aaDraft = [];
+}
+
+// ── INIT ──
+(async () => {
+  await loadQuizzers();
+  await loadScores();
+})();
+</script>
+</body>
+</html>
