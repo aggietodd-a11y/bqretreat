@@ -247,6 +247,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="session-score-pill">Session pts<br><strong id="session-pts">0</strong></div>
   </div>
   <div id="group-select-area" style="padding:16px 20px;border-bottom:1px solid var(--border)">
+    <div class="form-label" style="margin-bottom:8px">Division</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="judge-div-jr" onclick="setJudgeDiv('Junior')" style="flex:1;padding:11px;border-radius:10px;border:2px solid var(--gold);background:#f5c84222;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer">Junior</button>
+      <button id="judge-div-beg" onclick="setJudgeDiv('Beginner')" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:none;color:var(--gray);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer">Beginner</button>
+    </div>
     <div class="form-label" style="margin-bottom:8px">Select Group Walking In</div>
     <select class="quizzer-select" id="judge-group-filter" onchange="filterQuizzersByGroup()" style="margin-bottom:12px"><option value="">-- Select a group --</option></select>
     <div id="group-preview" style="display:none">
@@ -327,6 +332,7 @@ var parsedRows=[],selectedCol=null,selectedLastCol=null,selectedChurchCol=null,s
 var aaDraft=[],aaMoveQuizzerId=null,aaGroupCount=0,toastTimer=null;
 var timerInterval=null,timerRemaining=0,timerRunning=false;
 var activeDivisionTab='Junior';
+var judgeActiveDivision='Junior';
 
 function dn(n){if(!n)return'';var p=n.trim().split(/\s+/);return p.length===1?p[0]:p[0]+' '+p[p.length-1][0].toUpperCase()+'.';}
 function normDiv(s){if(!s)return'Junior';var v=s.toLowerCase().trim();if(/beg/i.test(v))return'Beginner';return'Junior';}
@@ -594,6 +600,19 @@ function renderRoomGrid(){
   document.getElementById('room-grid').innerHTML=h;currentRoom=null;document.getElementById('enter-room-btn').disabled=true;
 }
 function selectRoom(id){document.querySelectorAll('.room-card').forEach(function(c){c.classList.remove('selected');});document.getElementById('rc-'+id).classList.add('selected');currentRoom=ROOMS.find(function(r){return r.id===id;});document.getElementById('enter-room-btn').disabled=false;}
+function setJudgeDiv(div){
+  judgeActiveDivision=div;
+  var jr=document.getElementById('judge-div-jr');
+  var beg=document.getElementById('judge-div-beg');
+  if(jr){jr.style.borderColor=div==='Junior'?'var(--gold)':'var(--border)';jr.style.background=div==='Junior'?'#f5c84222':'none';jr.style.color=div==='Junior'?'var(--gold)':'var(--gray)';}
+  if(beg){beg.style.borderColor=div==='Beginner'?'#3498db':'var(--border)';beg.style.background=div==='Beginner'?'#3498db22':'none';beg.style.color=div==='Beginner'?'#3498db':'var(--gray)';}
+  // Rebuild group dropdown filtered by division
+  var groups=Array.from(new Set(quizzers.filter(function(q){return(q.division||'Junior')===div;}).map(function(q){return q.group;}).filter(Boolean))).sort(function(a,b){return a-b;});
+  var gh='<option value="">-- Select a group --</option>';
+  groups.forEach(function(g){gh+='<option value="'+g+'">Group '+g+'</option>';});
+  document.getElementById('judge-group-filter').innerHTML=gh;
+  document.getElementById('group-preview').style.display='none';
+}
 async function enterRoom(){
   if(!currentRoom)return;showLoad('Loading quizzers...');await loadQ();hideLoad();
   sessionLog=[];sessionPts=0;rotationQueue=[];rotationIndex=0;currentQuizzerId=null;
@@ -602,7 +621,11 @@ async function enterRoom(){
   document.getElementById('drill-info-title').textContent=currentRoom.type;
   document.getElementById('drill-info-rules').innerHTML=currentRoom.rules;
   document.getElementById('session-pts').textContent='0';
-  var groups=Array.from(new Set(quizzers.map(function(q){return q.group;}).filter(Boolean))).sort(function(a,b){return a-b;});
+  judgeActiveDivision='Junior';
+  var jr2=document.getElementById('judge-div-jr');var beg2=document.getElementById('judge-div-beg');
+  if(jr2){jr2.style.borderColor='var(--gold)';jr2.style.background='#f5c84222';jr2.style.color='var(--gold)';}
+  if(beg2){beg2.style.borderColor='var(--border)';beg2.style.background='none';beg2.style.color='var(--gray)';}
+  var groups=Array.from(new Set(quizzers.filter(function(q){return(q.division||'Junior')==='Junior';}).map(function(q){return q.group;}).filter(Boolean))).sort(function(a,b){return a-b;});
   var gh='<option value="">-- Select a group --</option>';groups.forEach(function(g){gh+='<option value="'+g+'">Group '+g+'</option>';});
   document.getElementById('judge-group-filter').innerHTML=gh;
   document.getElementById('group-select-area').style.display='block';
@@ -617,14 +640,14 @@ function confirmLeaveRoom(){
 function filterQuizzersByGroup(){
   var val=document.getElementById('judge-group-filter').value;
   if(!val){document.getElementById('group-preview').style.display='none';return;}
-  var filtered=quizzers.filter(function(q){return q.group===Number(val);}).sort(function(a,b){return a.name.localeCompare(b.name);});
+  var filtered=quizzers.filter(function(q){return q.group===Number(val)&&(q.division||'Junior')===judgeActiveDivision;}).sort(function(a,b){return a.name.localeCompare(b.name);});
   var h='';filtered.forEach(function(q,i){h+='<div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:14px;display:flex;align-items:center;gap:10px"><span style="font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--gray);width:22px">'+(i+1)+'</span><span style="font-weight:500">'+dn(q.name)+'</span></div>';});
   document.getElementById('group-preview-list').innerHTML=h||'<div style="padding:14px;color:var(--gray);font-size:14px">No quizzers in this group.</div>';
   document.getElementById('group-preview').style.display=filtered.length?'block':'none';
 }
 function startRotation(){
   var val=document.getElementById('judge-group-filter').value;if(!val){toast('Select a group first','error');return;}
-  rotationQueue=quizzers.filter(function(q){return q.group===Number(val);}).sort(function(a,b){return a.name.localeCompare(b.name);}).map(function(q){return q.id;});
+  rotationQueue=quizzers.filter(function(q){return q.group===Number(val)&&(q.division||'Junior')===judgeActiveDivision;}).sort(function(a,b){return a.name.localeCompare(b.name);}).map(function(q){return q.id;});
   if(!rotationQueue.length){toast('No quizzers in this group','error');return;}
   rotationIndex=0;currentQuizzerId=rotationQueue[0];
   document.getElementById('group-select-area').style.display='none';document.getElementById('rotation-area').style.display='block';
