@@ -11,8 +11,8 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,#1e3a6e55 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,#0a1830 0%,transparent 60%);pointer-events:none;z-index:0}
-.screen{display:none;position:relative;z-index:1;min-height:100vh;padding:0 0 40px}
-.screen.active{display:block}
+.screen{display:none;position:relative;z-index:1;min-height:100vh;padding:0 0 80px;overflow-y:auto}
+.screen.active{display:block;overflow-y:auto}
 #home{display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;min-height:100vh}
 #home.active{display:flex}
 .logo-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:3px;color:var(--gold);text-align:center;line-height:1;text-shadow:0 4px 24px #f5c84244}
