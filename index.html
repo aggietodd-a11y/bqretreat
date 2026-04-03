@@ -1456,8 +1456,21 @@ function downloadAwardsReport(){
       y+=10;
     });y+=6;
   }
+  // Junior Division - Page 1
   drawDiv(jt,'Junior Division',[245,200,66]);
-  drawDiv(bt,'Beginner Division',[52,152,219]);
+
+  // Beginner Division - always starts on a new page with fresh header
+  if(bt.length){
+    doc.addPage();
+    // Fresh header for page 2
+    doc.setFillColor(12,31,63);doc.rect(0,0,W,28,'F');
+    doc.setFillColor(245,200,66);doc.rect(0,26,W,2,'F');
+    doc.setTextColor(245,200,66);doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text('JBQ RETREAT',M,12);
+    doc.setFontSize(11);doc.setTextColor(138,155,191);doc.setFont('helvetica','normal');doc.text('Awards Report',M,21);
+    doc.setTextColor(240,244,255);doc.setFontSize(10);doc.text(new Date().toLocaleDateString(),W-M-25,21);
+    y=36;
+    drawDiv(bt,'Beginner Division',[52,152,219]);
+  }
   var pageCount=doc.getNumberOfPages();
   for(var p=1;p<=pageCount;p++){
     doc.setPage(p);
