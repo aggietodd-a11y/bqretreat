@@ -396,6 +396,39 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div style="font-size:13px;color:var(--gray);margin-bottom:12px">Download reports for all quizzers in the selected division one by one.</div>
       <button onclick="bulkDownload()" style="width:100%;padding:14px;border-radius:12px;border:1.5px solid var(--border);background:none;color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer">&#8595; Download All Reports</button>
     </div>
+
+    <!-- AWARDS -->
+    <div style="margin-top:20px;border-top:1px solid var(--gold);padding-top:16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);letter-spacing:2px;margin-bottom:4px">&#127942; Awards Report</div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:16px;line-height:1.6">Set the number of recipients per award tier per division. The app ranks quizzers by total score and assigns tiers from the top down.</div>
+
+      <!-- Junior -->
+      <div style="background:var(--card-bg);border:1px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Junior Division</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><div class="form-label" style="margin-bottom:4px">All Tournament</div><input class="form-input" id="aw-jr-at" type="number" min="0" max="99" placeholder="e.g. 6" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+          <div><div class="form-label" style="margin-bottom:4px">1st Place</div><input class="form-input" id="aw-jr-1" type="number" min="0" max="99" placeholder="e.g. 11" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+          <div><div class="form-label" style="margin-bottom:4px">2nd Place</div><input class="form-input" id="aw-jr-2" type="number" min="0" max="99" placeholder="e.g. 10" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+          <div><div class="form-label" style="margin-bottom:4px">3rd Place</div><input class="form-input" id="aw-jr-3" type="number" min="0" max="99" placeholder="e.g. 10" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+        </div>
+      </div>
+
+      <!-- Beginner -->
+      <div style="background:var(--card-bg);border:1px solid #3498db;border-radius:12px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#3498db;margin-bottom:12px">Beginner Division</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><div class="form-label" style="margin-bottom:4px">All Tournament</div><input class="form-input" id="aw-beg-at" type="number" min="0" max="99" placeholder="e.g. 6" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+          <div><div class="form-label" style="margin-bottom:4px">1st Place</div><input class="form-input" id="aw-beg-1" type="number" min="0" max="99" placeholder="e.g. 11" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+          <div><div class="form-label" style="margin-bottom:4px">2nd Place</div><input class="form-input" id="aw-beg-2" type="number" min="0" max="99" placeholder="e.g. 10" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+          <div><div class="form-label" style="margin-bottom:4px">3rd Place</div><input class="form-input" id="aw-beg-3" type="number" min="0" max="99" placeholder="e.g. 10" style="margin:0;padding:10px 12px" oninput="renderAwardsPreview()"></div>
+        </div>
+      </div>
+
+      <div id="awards-preview" style="display:none">
+        <div id="awards-preview-content"></div>
+        <button onclick="downloadAwardsReport()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--gold);color:var(--navy);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px">&#8595; Download Awards PDF</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -452,7 +485,7 @@ async function flushPendingQueue(){
   for(var i=0;i<q.length;i++){
     var entry=q[i];
     var r=await apiPost({action:'addScore',score:entry});
-    if(r)removeFromPending(entry.id);
+    if(r&&r.ok)removeFromPending(entry.id);
   }
 }
 
@@ -489,11 +522,8 @@ async function loadAll(){
     pending.forEach(function(p){if(!serverIds.has(p.id))merged.push(p);});
     scores=merged;
     saveScoreCache();
-    // Remove from pending any entries already confirmed on server
-    var stillPending=getPendingQueue().filter(function(p){return!serverIds.has(p.id);});
-    savePendingQueue(stillPending);
   }
-  // Retry any remaining pending entries that never made it to server
+  // Flush any pending entries that never made it to server
   flushPendingQueue();
 }
 
@@ -725,7 +755,7 @@ function renderAAPreview(){
     var members=aaDraft.filter(function(d){return d.group===g;}).map(function(d){return quizzers.find(function(q){return q.id===d.quizzerId;});}).filter(Boolean);
     var col=gc(g);
     h+='<div style="background:var(--navy);border:1px solid '+col+'44;border-radius:10px;margin-bottom:10px;overflow:hidden">';
-    h+='<div style="padding:10px 14px;background:'+col+'18;border-bottom:1px solid '+col+'44;font-family:Bebas Neue,sans-serif;font-size:16px;color:'+col+';letter-spacing:1px">Group '+g+' <span style="font-size:13px;color:var(--gray);font-family:DM Sans,sans-serif;font-weight:400">&#183; '+members.length+' kids</span></div>';
+    h+='<div style="padding:10px 14px;background:'+col+'18;border-bottom:1px solid '+col+'44;font-family:Georgia,sans-serif;font-size:16px;color:'+col+';letter-spacing:1px">Group '+g+' <span style="font-size:13px;color:var(--gray);font-family:DM Sans,sans-serif;font-weight:400">&#183; '+members.length+' kids</span></div>';
     members.forEach(function(q){h+='<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer" data-id="'+q.id+'" onclick="openAAMove(this.dataset.id)"><div><div style="font-size:14px;font-weight:600">'+dn(q.name)+'</div><div style="font-size:11px;color:var(--gray)">'+(q.church||'No church')+'</div></div><span style="font-size:12px;color:var(--gray)">Move &#8594;</span></div>';});
     h+='</div>';
   }
@@ -835,7 +865,7 @@ async function recordScore(idx){
   var btn=currentRoom.buttons[idx];var qz=quizzers.find(function(q){return q.id===currentQuizzerId;});if(!qz){toast('Quizzer not found','error');return;}
   var entry={id:Date.now().toString()+Math.random().toString(36).slice(2,6),quizzerId:currentQuizzerId,name:qz.name,roomId:currentRoom.id,roomName:currentRoom.name,pts:btn.pts,label:btn.label,ts:new Date().toISOString()};
   scores.push(entry);saveScoreCache();addToPending(entry);
-  apiPost({action:'addScore',score:entry}).then(function(r){if(r)removeFromPending(entry.id);});
+  apiPost({action:'addScore',score:entry}).then(function(r){if(r&&r.ok)removeFromPending(entry.id);});
   sessionLog.unshift(entry);sessionPts+=btn.pts;document.getElementById('session-pts').textContent=sessionPts;
   renderLE();toast((btn.pts>0?'+'+btn.pts+' pts':'No points')+' \u2014 '+dn(qz.name),btn.pts>0?'success':'');advanceRotation();
 }
@@ -1332,6 +1362,102 @@ function checkPin() {
   }
 }
 
+// AWARDS
+// Award tiers defined inline in assignAwards()
+
+function getAwardRecipients(div){
+  var divQ=quizzers.filter(function(q){return(q.division||'Junior')===div;});
+  var gm={};divQ.forEach(function(q){gm[q.id]=q;});
+  var t={};scores.forEach(function(s){if(!gm[s.quizzerId])return;if(!t[s.quizzerId])t[s.quizzerId]={name:s.name,total:0};t[s.quizzerId].total+=s.pts;});
+  return Object.entries(t).map(function(e){return{id:e[0],name:e[1].name,total:e[1].total};}).sort(function(a,b){return b.total-a.total;});
+}
+function getAwardCounts(div){
+  var p=div==='Junior'?'jr':'beg';
+  return{at:parseInt(document.getElementById('aw-'+p+'-at').value)||0,'1':parseInt(document.getElementById('aw-'+p+'-1').value)||0,'2':parseInt(document.getElementById('aw-'+p+'-2').value)||0,'3':parseInt(document.getElementById('aw-'+p+'-3').value)||0};
+}
+function assignAwards(recipients, counts) {
+  // Place groups: fill 1st, 2nd, 3rd sequentially by score rank
+  var PLACE_TIERS = [
+    {key:'1', label:'1st Place', color:[245,200,66]},
+    {key:'2', label:'2nd Place', color:[192,192,192]},
+    {key:'3', label:'3rd Place', color:[205,127,50]}
+  ];
+  var placed = [];
+  var idx = 0;
+  PLACE_TIERS.forEach(function(tier){
+    var n = counts[tier.key]||0;
+    for(var i=0;i<n&&idx<recipients.length;i++,idx++){
+      placed.push(Object.assign({},recipients[idx],{tier:tier.label,isAT:false}));
+    }
+  });
+  // All Tournament: independently top N scorers, mark them
+  var atCount = counts['at']||0;
+  placed.forEach(function(p,i){ p.isAT = i < atCount; });
+  return placed;
+}
+function renderAwardsPreview(){
+  var jc=getAwardCounts('Junior');var bc=getAwardCounts('Beginner');
+  var anySet=Object.values(jc).some(function(v){return v>0;})||Object.values(bc).some(function(v){return v>0;});
+  if(!anySet){document.getElementById('awards-preview').style.display='none';return;}
+  var jt=assignAwards(getAwardRecipients('Junior'),jc);
+  var bt=assignAwards(getAwardRecipients('Beginner'),bc);
+  function buildDivHTML(tiered,divName,bc2){
+    if(!tiered.length)return'';
+    var h='<div style="background:var(--card-bg);border:1px solid '+bc2+';border-radius:12px;overflow:hidden;margin-bottom:12px">';
+    h+='<div style="padding:10px 16px;background:'+bc2+'18;border-bottom:1px solid '+bc2+'44;font-size:14px;font-weight:700;color:'+bc2+'">'+divName+'</div>';
+    var lastTier='';
+    tiered.forEach(function(w,i){
+      if(w.tier!==lastTier){h+='<div style="padding:6px 16px;background:'+bc2+'10;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:'+bc2+'">'+w.tier+'</div>';lastTier=w.tier;}
+      h+='<div style="padding:9px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">';
+      h+='<span style="font-size:13px;color:var(--gray);width:20px">'+(i+1)+'</span>';
+      var atBadge=w.isAT?'<span style="font-size:10px;font-weight:700;color:var(--navy);background:var(--gold);border-radius:6px;padding:2px 6px;margin-left:6px">AT</span>':'';
+      h+='<span style="flex:1;font-weight:600">'+dn(w.name)+atBadge+'</span>';
+      h+='<span style="font-size:13px;color:var(--gold);font-weight:700">'+w.total+' pts</span></div>';
+    });
+    return h+'</div>';
+  }
+  var html=buildDivHTML(jt,'Junior Division','#F5C842')+buildDivHTML(bt,'Beginner Division','#3498db');
+  if(!html)html='<div style="padding:16px;color:var(--gray);text-align:center">No scores recorded yet.</div>';
+  document.getElementById('awards-preview-content').innerHTML=html;
+  document.getElementById('awards-preview').style.display='block';
+}
+function downloadAwardsReport(){
+  var jc=getAwardCounts('Junior');var bc=getAwardCounts('Beginner');
+  var jt=assignAwards(getAwardRecipients('Junior'),jc);
+  var bt=assignAwards(getAwardRecipients('Beginner'),bc);
+  var lib=window.jspdf?window.jspdf.jsPDF:jspdf.jsPDF;
+  var doc=new lib({orientation:'portrait',unit:'mm',format:'letter'});
+  var W=215.9,M=18;
+  doc.setFillColor(12,31,63);doc.rect(0,0,W,28,'F');
+  doc.setFillColor(245,200,66);doc.rect(0,26,W,2,'F');
+  doc.setTextColor(245,200,66);doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text('JBQ RETREAT',M,12);
+  doc.setFontSize(11);doc.setTextColor(138,155,191);doc.setFont('helvetica','normal');doc.text('Awards Report',M,21);
+  doc.setTextColor(240,244,255);doc.setFontSize(10);doc.text(new Date().toLocaleDateString(),W-M-25,21);
+  var y=36;
+  function drawDiv(tiered,divName,hc){
+    if(!tiered.length)return;
+    doc.setFillColor(hc[0],hc[1],hc[2]);doc.roundedRect(M,y-4,W-M*2,11,2,2,'F');
+    doc.setTextColor(12,31,63);doc.setFontSize(12);doc.setFont('helvetica','bold');doc.text(divName,M+4,y+4);y+=13;
+    var lastTier='';
+    tiered.forEach(function(w,i){
+      if(w.tier!==lastTier){
+        doc.setFillColor(30,58,110);doc.rect(M,y-3,W-M*2,8,'F');
+        doc.setTextColor(hc[0],hc[1],hc[2]);doc.setFontSize(9);doc.setFont('helvetica','bold');doc.text(w.tier.toUpperCase(),M+3,y+3);y+=10;lastTier=w.tier;
+      }
+      var rb=i%2===0?[22,45,87]:[18,38,72];
+      doc.setFillColor(rb[0],rb[1],rb[2]);doc.rect(M,y-3,W-M*2,9,'F');
+      doc.setTextColor(138,155,191);doc.setFontSize(9);doc.setFont('helvetica','normal');doc.text(String(i+1),M+3,y+4);
+      doc.setTextColor(240,244,255);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(w.name,M+12,y+4);
+      doc.setTextColor(hc[0],hc[1],hc[2]);doc.text(String(w.total)+' pts',W-M-18,y+4);
+      if(w.isAT){doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('ALL TOURNAMENT',W-M-38,y+4);}
+      y+=10;
+    });y+=6;
+  }
+  drawDiv(jt,'Junior Division',[245,200,66]);
+  drawDiv(bt,'Beginner Division',[52,152,219]);
+  doc.setFontSize(8);doc.setTextColor(138,155,191);doc.setFont('helvetica','normal');doc.text('Generated by JBQ Retreat Scoring App',M,270);
+  doc.save('JBQ_Awards_Report.pdf');
+}
 function exportCSV(){
   if(!scores.length){toast('No scores to export','error');return;}
   var header='id,quizzerName,roomId,roomName,pts,label,timestamp';
@@ -1350,19 +1476,16 @@ function exportCSV(){
 }
 
 (async function(){
-  // Load quizzers and scores from local cache instantly
+  // Load from local cache instantly
   try{
     var cached=localStorage.getItem('jbq_quizzers');
     if(cached){var cq=JSON.parse(cached);if(Array.isArray(cq))quizzers=cq.map(function(q){return Object.assign({},q,{group:q.group?Number(q.group):null,church:q.church||null});});}
   }catch(e){}
-  loadScoreCache();
-  // Show home immediately, sync from server in background
+  // Hide spinner and show home immediately
   hideLoad();
   showScreen('home');
+  // Refresh from server silently in background
   try{await loadAll();}catch(e){}
-  // Auto-retry pending scores when network comes back
-  window.addEventListener('online',function(){flushPendingQueue();toast('Back online — syncing scores...','success');});
-  window.addEventListener('offline',function(){toast('Offline — scores saved locally','');});
 })();
 </script>
 </body>
