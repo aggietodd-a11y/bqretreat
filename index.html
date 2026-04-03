@@ -26,7 +26,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .screen-header{background:var(--navy-light);border-bottom:1px solid var(--border);padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
 .back-btn{background:none;border:none;color:var(--gray);font-size:22px;cursor:pointer;padding:4px;line-height:1}
 .screen-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold)}
-.screen-body{padding:20px}
+.screen-body{padding:20px;overflow:visible}
 .form-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gray);margin-bottom:8px;display:block}
 .form-input{width:100%;padding:14px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card-bg);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;margin-bottom:20px;transition:border-color .15s}
 .form-input:focus{border-color:var(--gold)}
@@ -424,7 +424,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </div>
       </div>
 
-      <div id="awards-preview" style="display:none">
+      <div id="awards-preview" style="display:none;width:100%">
         <div id="awards-preview-content"></div>
         <button onclick="downloadAwardsReport()" style="width:100%;padding:14px;border-radius:12px;border:none;background:var(--gold);color:var(--navy);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px">&#8595; Download Awards PDF</button>
       </div>
