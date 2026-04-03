@@ -485,7 +485,7 @@ async function flushPendingQueue(){
   for(var i=0;i<q.length;i++){
     var entry=q[i];
     var r=await apiPost({action:'addScore',score:entry});
-    if(r&&r.ok)removeFromPending(entry.id);
+    if(r)removeFromPending(entry.id);
   }
 }
 
@@ -522,6 +522,8 @@ async function loadAll(){
     pending.forEach(function(p){if(!serverIds.has(p.id))merged.push(p);});
     scores=merged;
     saveScoreCache();
+    // Remove confirmed-by-server entries from pending queue to prevent re-POST
+    savePendingQueue(pending.filter(function(e){return!serverIds.has(e.id);}));
   }
   // Flush any pending entries that never made it to server
   flushPendingQueue();
@@ -865,7 +867,7 @@ async function recordScore(idx){
   var btn=currentRoom.buttons[idx];var qz=quizzers.find(function(q){return q.id===currentQuizzerId;});if(!qz){toast('Quizzer not found','error');return;}
   var entry={id:Date.now().toString()+Math.random().toString(36).slice(2,6),quizzerId:currentQuizzerId,name:qz.name,roomId:currentRoom.id,roomName:currentRoom.name,pts:btn.pts,label:btn.label,ts:new Date().toISOString()};
   scores.push(entry);saveScoreCache();addToPending(entry);
-  apiPost({action:'addScore',score:entry}).then(function(r){if(r&&r.ok)removeFromPending(entry.id);});
+  apiPost({action:'addScore',score:entry}).then(function(r){if(r)removeFromPending(entry.id);});
   sessionLog.unshift(entry);sessionPts+=btn.pts;document.getElementById('session-pts').textContent=sessionPts;
   renderLE();toast((btn.pts>0?'+'+btn.pts+' pts':'No points')+' \u2014 '+dn(qz.name),btn.pts>0?'success':'');advanceRotation();
 }
