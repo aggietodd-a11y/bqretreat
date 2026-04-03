@@ -459,8 +459,8 @@ function toast(msg,type){var t=document.getElementById('toast');t.textContent=ms
 function showLoad(msg){var o=document.getElementById('loading-overlay');o.querySelector('.loading-text').textContent=msg||'Loading...';o.style.display='flex';}
 function hideLoad(){document.getElementById('loading-overlay').style.display='none';}
 
-async function apiGet(a){try{var r=await fetch(API+'?action='+a);return await r.json();}catch(e){return null;}}
-async function apiPost(b){try{var r=await fetch(API,{method:'POST',body:JSON.stringify(b)});return await r.json();}catch(e){return null;}}
+async function apiGet(a){try{var c=new AbortController();var t=setTimeout(function(){c.abort();},15000);var r=await fetch(API+'?action='+a,{signal:c.signal});clearTimeout(t);return await r.json();}catch(e){return null;}}
+async function apiPost(b){try{var c=new AbortController();var t=setTimeout(function(){c.abort();},15000);var r=await fetch(API,{method:'POST',body:JSON.stringify(b),signal:c.signal});clearTimeout(t);return await r.json();}catch(e){return null;}}
 // LOCAL SCORE CACHE + PENDING QUEUE
 function saveScoreCache(){
   try{localStorage.setItem('jbq_scores_cache',JSON.stringify(scores));}catch(e){}
@@ -508,7 +508,9 @@ async function loadS(){
     pending.forEach(function(p){if(!serverIds.has(p.id))merged.push(p);});
     scores=merged;
     saveScoreCache();
+    savePendingQueue(pending.filter(function(e){return!serverIds.has(e.id);}));
   }
+  flushPendingQueue();
 }
 async function loadAll(){
   try{var cached=localStorage.getItem('jbq_quizzers');if(cached){var cq=JSON.parse(cached);if(Array.isArray(cq)&&cq.length)quizzers=cq.map(function(q){return Object.assign({},q,{group:q.group?Number(q.group):null,church:q.church||null});});}}catch(e){}
@@ -880,7 +882,10 @@ async function undoE(id){
   var i=sessionLog.findIndex(function(e){return e.id===id;});if(i===-1)return;
   var entry=sessionLog[i];sessionLog.splice(i,1);sessionPts-=entry.pts;scores=scores.filter(function(s){return s.id!==id;});
   saveScoreCache();removeFromPending(id);
-  document.getElementById('session-pts').textContent=sessionPts;apiPost({action:'deleteScore',id:id});renderLE();toast('Entry removed','');
+  document.getElementById('session-pts').textContent=sessionPts;renderLE();
+  var r=await apiPost({action:'deleteScore',id:id});
+  if(!r){sessionLog.splice(i,0,entry);sessionPts+=entry.pts;scores.push(entry);saveScoreCache();document.getElementById('session-pts').textContent=sessionPts;renderLE();toast('Undo failed - score restored','error');}
+  else{toast('Entry removed','');}
 }
 async function clearLog(){
   if(!sessionLog.length)return;
@@ -1192,7 +1197,7 @@ function generatePDF(quizzerId){
   var rank=getQuizzerRank(quizzerId);
   var totalPts=Object.values(stats).reduce(function(s,r){return s+r.total;},0);
   var rooms=repActiveDivision==='Beginner'?ROOMS.filter(function(r){return r.id!==3;}):ROOMS;
-  var div=window.jspdf?window.jspdf.jsPDF:jspdf.jsPDF;
+  try{var div=window.jspdf?window.jspdf.jsPDF:jspdf.jsPDF;
   var doc=new div({orientation:'portrait',unit:'mm',format:'letter'});
   var W=215.9,M=18;
 
@@ -1296,6 +1301,7 @@ function generatePDF(quizzerId){
 
   var filename=q.name.replace(/\s+/g,'_')+'_JBQ_Report.pdf';
   doc.save(filename);
+  }catch(e){toast('PDF unavailable - check internet connection','error');}
 }
 
 // PIN PROTECTION
@@ -1427,7 +1433,7 @@ function downloadAwardsReport(){
   var jc=getAwardCounts('Junior');var bc=getAwardCounts('Beginner');
   var jt=assignAwards(getAwardRecipients('Junior'),jc);
   var bt=assignAwards(getAwardRecipients('Beginner'),bc);
-  var lib=window.jspdf?window.jspdf.jsPDF:jspdf.jsPDF;
+  try{var lib=window.jspdf?window.jspdf.jsPDF:jspdf.jsPDF;
   var doc=new lib({orientation:'portrait',unit:'mm',format:'letter'});
   var W=215.9,M=18;
   doc.setFillColor(12,31,63);doc.rect(0,0,W,28,'F');
@@ -1496,6 +1502,7 @@ function downloadAwardsReport(){
     doc.text('Page '+p+' of '+pageCount,W-M-20,275);
   }
   doc.save('JBQ_Awards_Report.pdf');
+  }catch(e){toast('PDF unavailable - check internet connection','error');}
 }
 function exportCSV(){
   if(!scores.length){toast('No scores to export','error');return;}
